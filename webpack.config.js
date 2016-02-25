@@ -1,7 +1,7 @@
 var path = require('path');
 module.exports = {
     entry: {
-        main:"./index.js",
+        main:"./counter.js",
         second:"./index2.js"
     },
     output: {
