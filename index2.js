@@ -1,9 +1,9 @@
 "use strict";
-var expect = require('expect.js');
-var deepFreeze = require('deep-freeze');
-
+const expect = require('expect.js');
+const deepFreeze = require('deep-freeze');
+const React = require('react');
+const ReactDom = require('react-dom');
 const Redux = require('redux');
-
 
 const todo = (state, action) => {
     switch (action.type) {
@@ -15,6 +15,8 @@ const todo = (state, action) => {
             };
             break;
         case 'TOGGLE_TODO':
+            console.log(action);
+            console.log(!state.completed);
             if (action.id != state.id) {
                 return state
             }
@@ -31,10 +33,8 @@ const todos = (state = [], action) => {
                 ...state,
                 todo(undefined, action)
             ];
-            break;
         case 'TOGGLE_TODO':
             return state.map(t=>todo(t, action));
-            break;
         default:
             return state;
             break
@@ -52,61 +52,125 @@ const visibilityFilter = (state = 'SHOW_ALL', action) => {
     }
 };
 
-
 const {combineReducers}= Redux;
+
+const FilterLink = ({filter,currentFilter, children})=> {
+    if(currentFilter===filter){
+        return <span>{children}</span>
+    }
+    return <a href="#"
+              onClick={ e=>
+                  {
+                    e.preventDefault();
+                    store.dispatch({
+                        type:'SET_VISIBILITY_FILTER',
+                        filter
+                    });
+                  }
+              }>
+        {children}
+    </a>
+};
+
+const getVisibleTodos = (todos, filter)=> {
+    switch (filter) {
+        case "SHOW_ALL":
+            return todos;
+        case "SHOW_ACTIVE":
+            return todos.filter(todo=> {
+                return !todo.completed
+            });
+        case "SHOW_COMPLETED":
+            return todos.filter(todo=> {
+                return todo.completed
+            });
+    }
+};
 
 const todoApp = combineReducers({
     todos,
     visibilityFilter
 });
 
-
 const {createStore} = Redux;
 const store = createStore(todoApp);
 
+const {Component} = React;
 
-console.log('Initial state:');
-console.log(store.getState());
-console.log('---------------');
+let nextId = 0;
 
-console.log('Dispatching ADD_TODO');
-store.dispatch({
-    type: 'ADD_TODO',
-    id: 0,
-    text: 'Lern Redux'
-});
-console.log('---------------');
+class TodoApp extends Component {
+    render() {
+        const{todos,visibilityFilter} = this.props;
+        const visibleTodos = getVisibleTodos(
+            todos,
+            visibilityFilter
+        );
+        return (
+            <div>
+                <input ref={node => {
+                    this.input = node;
+                }}/>
+                <button onClick={()=>{
+                    store.dispatch({
+                        type:'ADD_TODO',
+                        text:this.input.value,
+                        id:nextId++
+                    });
+                    this.input.value='';
+                }}>
+                    AddToDo
+                </button>
+                <ul>
+                    {visibleTodos.map(todo=>
+                        <li
+                            onClick={ ()=>{
+                                 store.dispatch({
+                                    type:'TOGGLE_TODO',
+                                    id:todo.id
+                                })
+                            }}
+                            style={{textDecoration:
+                                todo.completed
+                                    ?'line-through'
+                                    :'none'
+                                }}
+                            key={todo.id}>
+                            {todo.text}
+                        </li>
+                    )}
+                </ul>
+                <p>
+                    Show:
+                    {' '}
+                    <FilterLink filter="SHOW_ALL" currentFilter={visibilityFilter}>
+                        All
+                    </FilterLink>
+                    {' '}
+                    <FilterLink filter="SHOW_ACTIVE" currentFilter={visibilityFilter}>
+                        Active
+                    </FilterLink>
+                    {' '}
+                    <FilterLink filter="SHOW_COMPLETED" currentFilter={visibilityFilter}>
+                        Complated
+                    </FilterLink>
+                </p>
+            </div>
+        )
+    }
+}
 
-console.log('Current state:');
-console.log(store.getState());
-console.log('---------------');
 
-store.dispatch({
-    id: 0,
-    text: 'Lern Redux',
-    type: 'ADD_TODO'
-});
-console.log('Current state:');
-console.log(store.getState());
-console.log('---------------');
+const render = ()=> {
+    ReactDom.render(
+        <TodoApp {...store.getState()}/>,
+        document.getElementById('root')
+    );
+};
 
-store.dispatch({
-    id: 1,
-    type: 'TOGGLE_TODO'
-});
-console.log('Current state:');
-console.log(store.getState());
-console.log('---------------');
+store.subscribe(render);
 
-
-store.dispatch({
-    filter: 'SHOW_COMPLETE',
-    type: 'SET_VISIBILITY_FILTER'
-});
-console.log('Current state:');
-console.log(store.getState());
-console.log('---------------');
-
+render();
 
 const testAddTodo = () => {
     const stateBefore = [];
