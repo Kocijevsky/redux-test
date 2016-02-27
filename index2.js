@@ -4,6 +4,7 @@ const deepFreeze = require('deep-freeze');
 const React = require('react');
 const ReactDom = require('react-dom');
 const Redux = require('redux');
+const {Provider}=require('react-redux');
 
 const todo = (state, action) => {
     switch (action.type) {
@@ -273,22 +274,6 @@ const TodoApp = () =>
             <Footer/>
         </div>
     );
-
-class Provider extends Component {
-    getChildContext() {
-        return {
-            store: this.props.store
-        }
-    }
-
-    render() {
-        return this.props.children;
-    }
-}
-
-Provider.childContextTypes = {
-    store: React.PropTypes.object
-};
 
 ReactDom.render(
     <Provider store={createStore(todoApp)}>

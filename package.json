@@ -5,7 +5,7 @@
   "main": "mysript.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build":"webpack --watch --color --progress"
+    "build": "webpack --watch --color --progress"
   },
   "author": "",
   "license": "ISC",
@@ -21,6 +21,7 @@
     "expect.js": "^0.3.1",
     "react": "^0.14.7",
     "react-dom": "^0.14.7",
+    "react-redux": "^4.4.0",
     "redux": "^3.3.1",
     "webpack": "^1.12.14"
   }
